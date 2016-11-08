@@ -7,7 +7,7 @@ use SetBased\Exception\FallenException;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class VarDumper
+ * Class VarDumper.
  */
 class VarDumper
 {
@@ -24,27 +24,31 @@ class VarDumper
    */
   private $handle;
 
+  /**
+   * The variables that we have dumped so var.
+   *
+   * @var array
+   */
+  private $seen;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Main function for dumping.
    *
-   * @param string $name The name of the variable.
-   * @param *      $value Variable for dumping.
+   * @param string $name  The name of the variable.
+   * @param mixed  $value Variable for dumping.
+   *
+   * @api
+   * @since 1.0.0
    */
   public function dump($name, $value)
   {
-    if (isset($this->fileName))
-    {
-      $this->handle = fopen($this->fileName, 'w');
-    }
+    $this->handle = fopen($this->fileName, 'wb');
 
-    $seen = [];
-    $this->recursiveDump($value, $name, $seen);
+    $this->seen = [];
+    $this->recursiveDump($value, $name, gettype($name));
 
-    if (is_resource($this->handle))
-    {
-      fclose($this->handle);
-    }
+    fclose($this->handle);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -60,19 +64,228 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Function for check two variables. Return true if refs is same.
+   * Dumps an array.
    *
-   * @param $first
-   * @param $second
+   * @param array  $value   The array.
+   * @param string $name    Variable name.
+   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   */
+  private function dumpArray(&$value, $name, $keyType)
+  {
+    $id = $this->dumpReference($value, $name, $keyType);
+    if ($id===false)
+    {
+      fwrite($this->handle, Html::generateTag('array', ['name'     => $name,
+                                                        'key_type' => $keyType,
+                                                        'id'       => (sizeof($this->seen) - 1)]));
+      foreach ($value as $key => &$item)
+      {
+        $this->recursiveDump($item, $key, gettype($key));
+      }
+      fwrite($this->handle, '</array>');
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps a boolean.
+   *
+   * @param bool   $value   The boolean.
+   * @param string $name    The name of the variable.
+   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   */
+  private function dumpBool(&$value, $name, $keyType)
+  {
+    $val = ($value) ? 'true' : 'false';
+    fwrite($this->handle, Html::generateVoidElement($val, ['name' => $name, 'key_type' => $keyType]));
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps null.
+   *
+   * @param string $name    The name of the variable.
+   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   */
+  private function dumpNull($name, $keyType)
+  {
+    fwrite($this->handle, Html::generateVoidElement('null', ['name' => $name, 'key_type' => $keyType]));
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps an object.
+   *
+   * @param object $value   The object.
+   * @param string $name    The name of the variable.
+   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   */
+  private function dumpObject($value, $name, $keyType)
+  {
+    $id = $this->dumpReference($value, $name, $keyType);
+    if ($id===false)
+    {
+      fwrite($this->handle, Html::generateTag('object', ['name'     => $name,
+                                                         'key_type' => $keyType,
+                                                         'class'    => get_class($value),
+                                                         'id'       => (sizeof($this->seen) - 1)]));
+
+      $properties = get_object_vars($value);
+      foreach ($properties as $key => $item)
+      {
+        $this->recursiveDump($item, $key, null);
+      }
+
+      fwrite($this->handle, '</object>');
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps a reference if a value has been dumped before and returns th ID f the variable. Otherwise returns false.
+   *
+   * @param mixed  $value   The reference or variable.
+   * @param string $name    The name of the variable.
+   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   *
+   * @return false|int
+   */
+  private function dumpReference(&$value, $name, $keyType)
+  {
+    switch (true)
+    {
+      case is_bool($value):
+      case is_null($value):
+        $id = false;
+        break;
+
+      case is_int($value):
+      case is_string($value):
+      case is_double($value):
+      case is_array($value):
+      case is_object($value):
+      case is_resource($value):
+        $id = $this->testSeen($value);
+        if ($id!==false)
+        {
+          fwrite($this->handle, Html::generateVoidElement('reference', ['name'     => $name,
+                                                                        'key_type' => $keyType,
+                                                                        'id'       => $id]));
+        }
+        else
+        {
+          $this->seen[] = &$value;
+        }
+        break;
+
+      default:
+        throw new FallenException('type', gettype($value));
+    }
+
+    return $id;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps a resource.
+   *
+   * @param resource $value   The resource.
+   * @param string   $name    The name of the variable.
+   * @param string   $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   */
+  private function dumpResource($value, $name, $keyType)
+  {
+    $id = $this->dumpReference($value, $name, $keyType);
+    if ($id===false)
+    {
+      fwrite($this->handle, Html::generateVoidElement('resource', ['name'     => $name,
+                                                                   'key_type' => $keyType,
+                                                                   'type'     => get_resource_type($value),
+                                                                   'id'       => (sizeof($this->seen) - 1)]));
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps an integer, double, or string.
+   *
+   * @param string|int|double $value   The scalar.
+   * @param string            $name    The name of the variable.
+   * @param string            $keyType When the name of the variable is key of an array the type of the key (integer or
+   *                                   string).
+   */
+  private function dumpScalarTypes(&$value, $name, $keyType)
+  {
+    $id = $this->dumpReference($value, $name, $keyType);
+    if ($id===false)
+    {
+      fwrite($this->handle, Html::generateElement(gettype($value),
+                                                  ['name'     => $name,
+                                                   'key_type' => $keyType,
+                                                   'id'       => (sizeof($this->seen) - 1)],
+                                                  $value));
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps recursively a variable.
+   *
+   * @param mixed  $value   The variable.
+   * @param string $name    Variable The name of the variable.
+   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   */
+  private function recursiveDump(&$value, $name, $keyType)
+  {
+    switch (true)
+    {
+      case is_null($value):
+        $this->dumpNull($name, $keyType);
+        break;
+
+      case is_bool($value):
+        $this->dumpBool($value, $name, $keyType);
+        break;
+
+      case is_int($value):
+      case is_string($value):
+      case is_double($value):
+        $this->dumpScalarTypes($value, $name, $keyType);
+        break;
+
+      case is_object($value):
+        $this->dumpObject($value, $name, $keyType);
+        break;
+
+      case is_array($value):
+        $this->dumpArray($value, $name, $keyType);
+        break;
+
+      case is_resource($value):
+        $this->dumpResource($value, $name, $keyType);
+        break;
+
+      default:
+        throw new FallenException('type', gettype($value));
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns true if and only if two variables are references to the same variable content.
+   *
+   * @param mixed $first  The first variable.
+   * @param mixed $second The second variable.
    *
    * @return bool
    */
-  private function EqualReferences(&$first, &$second)
+  private function testReferences(&$first, &$second)
   {
     if ($first!==$second)
     {
       return false;
     }
+
     $value_of_first = $first;
     $first          = ($first===true) ? false : true;
     $is_ref         = ($first===$second);
@@ -83,63 +296,20 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Dumping objects.
+   * If a value has been seen before returns the ID of the variable. Otherwise returns false.
    *
-   * @param *      $value      Variable for dumping.
-   * @param string $name       Variable name.
-   * @param array  $seenValues Already seen values.
+   * @param mixed $value The value.
    *
-   * @return string
-   * @throws FallenException
-   */
-  private function recursiveDump($value, $name, &$seenValues)
-  {
-    switch (true)
-    {
-      case is_null($value):
-        $this->dumpNull($name);
-        break;
-
-      case is_bool($value):
-        $this->dumpBool($value, $name); // xxx rename others too
-        break;
-
-      case is_int($value):
-      case is_string($value):
-      case is_double($value):
-        $this->dumpScalarTypes($value, $name);
-        break;
-
-      case is_object($value):
-        $this->dumpObject($value, $name, $seenValues);
-        break;
-
-      case is_array($value):
-        $this->dumpArray($value, $name, $seenValues);
-        break;
-
-      default:
-        throw new FallenException('type', gettype($value));
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns true if we have seen a value before. Otherwise returns false.
-   *
-   * @param array|object $value The value.
-   * @param array        $seen  Already seen values.
-   *
-   * @return int|bool
+   * @return int|false
    *
    * @throws FallenException
    */
-  private function testValueSeen($value, &$seen)
+  private function testSeen(&$value)
   {
     switch (true)
     {
       case is_object($value):
-        foreach ($seen as $id => $item)
+        foreach ($this->seen as $id => $item)
         {
           if ($item===$value)
           {
@@ -147,11 +317,16 @@ class VarDumper
           }
         }
         break;
+
       case is_array($value):
-        foreach ($seen as $id => &$item)
+      case is_string($value):
+      case is_int($value):
+      case is_double($value):
+      case is_resource($value):
+        foreach ($this->seen as $id => &$item)
         {
-//          $check = $this->EqualReferences($item, $value);
-          if ($item===$value)
+          $check = $this->testReferences($item, $value);
+          if ($check)
           {
             return $id;
           }
@@ -159,109 +334,10 @@ class VarDumper
         break;
 
       default :
-        throw new FallenException('type of value', gettype($value));
+        throw new FallenException('gettype', gettype($value));
     }
 
     return false;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Dump array variable.
-   *
-   * @param array  $array       Variable for dumping.
-   * @param string $name        Variable name.
-   * @param array  $seen_values Already seen values.
-   */
-  private function dumpArray($array, $name, &$seen_values)
-  {
-    $has_seen_item = $this->testValueSeen($array, $seen_values);
-    if ($has_seen_item===false)
-    {
-      $seen_values[] = $array;
-      fwrite($this->handle, Html::generateTag('array', ['name' => $name,
-                                                        'id'   => (sizeof($seen_values) - 1)]));
-      foreach ($array as $key => $item)
-      {
-        $this->recursiveDump($item, $key, $seen_values);
-      }
-      fwrite($this->handle, '</array>');
-    }
-    else
-    {
-      fwrite($this->handle, Html::generateVoidElement('array', ['name'      => $name,
-                                                                'id'        => $has_seen_item,
-                                                                'recursion' => 'true']));
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Dump bool variable.
-   *
-   * @param bool   $value Variable for dumping.
-   * @param string $name  Variable name.
-   */
-  private function dumpBool($value, $name)
-  {
-    $val = ($value) ? 'true' : 'false';
-    fwrite($this->handle, Html::generateVoidElement($val, ['name' => $name]));
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Dump null variable.
-   *
-   * @param string $name Variable name.
-   */
-  private function dumpNull($name)
-  {
-    fwrite($this->handle, Html::generateVoidElement('null', ['name' => $name]));
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Dump object variable.
-   *
-   * @param object $value       Variable for dumping.
-   * @param        $name
-   * @param array  $seen_values Already seen values.
-   */
-  private function dumpObject($value, $name, &$seen_values)
-  {
-    $type          = get_class($value);
-    $properties    = get_object_vars($value);
-    $has_seen_item = $this->testValueSeen($value, $seen_values);
-    if ($has_seen_item===false)
-    {
-      $seen_values[] = $value;
-      fwrite($this->handle, Html::generateTag('object', ['name'  => $name,
-                                                         'class' => $type,
-                                                         'id'    => (sizeof($seen_values) - 1)]));
-      foreach ($properties as $key => $item)
-      {
-        $this->recursiveDump($item, $key, $seen_values);
-      }
-      fwrite($this->handle, '</object>');
-    }
-    else
-    {
-      fwrite($this->handle, Html::generateVoidElement('object', ['name'  => $name,
-                                                                 'id'    => $has_seen_item,
-                                                                 'class' => 'recursion']));
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Dump scalar variables.
-   *
-   * @param string|int|double $value Variable for dumping.
-   * @param string            $name  Variable name.
-   */
-  private function dumpScalarTypes($value, $name)
-  {
-    fwrite($this->handle, Html::generateElement(gettype($value), ['name' => $name], $value));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
