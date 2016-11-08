@@ -33,6 +33,30 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Returns true if and only if two variables are references to the same variable content.
+   *
+   * @param mixed $first  The first variable.
+   * @param mixed $second The second variable.
+   *
+   * @return bool
+   */
+  private static function testReferences(&$first, &$second)
+  {
+    if ($first!==$second)
+    {
+      return false;
+    }
+
+    $value_of_first = $first;
+    $first          = ($first===true) ? false : true;
+    $is_ref         = ($first===$second);
+    $first          = $value_of_first;
+
+    return $is_ref;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Main function for dumping.
    *
    * @param string $name  The name of the variable.
@@ -272,30 +296,6 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns true if and only if two variables are references to the same variable content.
-   *
-   * @param mixed $first  The first variable.
-   * @param mixed $second The second variable.
-   *
-   * @return bool
-   */
-  private function testReferences(&$first, &$second)
-  {
-    if ($first!==$second)
-    {
-      return false;
-    }
-
-    $value_of_first = $first;
-    $first          = ($first===true) ? false : true;
-    $is_ref         = ($first===$second);
-    $first          = $value_of_first;
-
-    return $is_ref;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * If a value has been seen before returns the ID of the variable. Otherwise returns false.
    *
    * @param mixed $value The value.
@@ -325,7 +325,7 @@ class VarDumper
       case is_resource($value):
         foreach ($this->seen as $id => &$item)
         {
-          $check = $this->testReferences($item, $value);
+          $check = self::testReferences($item, $value);
           if ($check)
           {
             return $id;
