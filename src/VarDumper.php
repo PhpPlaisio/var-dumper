@@ -333,7 +333,7 @@ class VarDumper
         }
         break;
 
-      default :
+      default:
         throw new FallenException('gettype', gettype($value));
     }
 
