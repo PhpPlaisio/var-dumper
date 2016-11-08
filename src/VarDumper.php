@@ -27,7 +27,7 @@ class VarDumper
   /**
    * The variables that we have dumped so var.
    *
-   * @var array
+   * @var \mixed[]
    */
   private $seen;
 
