@@ -1,0 +1,17 @@
+{
+  "name": "setbased/abc/debug",
+  "description": "Var Dumper",
+  "type": "project",
+  "require-dev": {
+  },
+  "require": {
+    "php": ">=5.4",
+    "setbased/exception": "*",
+    "setbased/abc-html": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "SetBased\\Abc\\Debug\\": "src/"
+    }
+  }
+}
