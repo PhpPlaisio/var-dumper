@@ -1,13 +1,17 @@
 {
-  "name": "setbased/abc/debug",
-  "description": "Var Dumper",
+  "name": "setbased/abc-debug",
+  "description": "ABC Framework - Debug",
+  "keywords": [
+    "ABC",
+    "Framework",
+    "Debug"
+  ],
   "type": "project",
-  "require-dev": {
-  },
+  "license": "MIT",
   "require": {
-    "php": ">=5.4",
-    "setbased/exception": "*",
-    "setbased/abc-html": "*"
+    "php": ">=5.4.0",
+    "setbased/exception": "1.*",
+    "setbased/abc-html": "1.*"
   },
   "autoload": {
     "psr-4": {
