@@ -5,9 +5,9 @@ namespace SetBased\Abc\Debug;
 use SetBased\Abc\Helper\Html;
 use SetBased\Exception\FallenException;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
- * Class VarDumper.
+ * A VarDumper with minimal memory foot print that detects references and recursion and writes data directly to a
+ * stream.
  */
 class VarDumper
 {
@@ -18,6 +18,13 @@ class VarDumper
    * @var string.
    */
   private $fileName;
+
+  /**
+   * A unique string that is not key in any array.
+   *
+   * @var string
+   */
+  private $gid;
 
   /**
    * Handle to resource file.
@@ -65,11 +72,13 @@ class VarDumper
    * @api
    * @since 1.0.0
    */
-  public function dump($name, $value)
+  public function dump($name, &$value)
   {
+    $this->seen = [];
+    $this->gid  = uniqid(mt_rand(), true);
+
     $this->handle = fopen($this->fileName, 'wb');
 
-    $this->seen = [];
     $this->recursiveDump($value, $name, gettype($name));
 
     fclose($this->handle);
@@ -186,7 +195,6 @@ class VarDumper
       case is_int($value):
       case is_string($value):
       case is_double($value):
-      case is_array($value):
       case is_object($value):
       case is_resource($value):
         $id = $this->testSeen($value);
@@ -196,9 +204,15 @@ class VarDumper
                                                                         'key_type' => $keyType,
                                                                         'id'       => $id]));
         }
-        else
+        break;
+
+      case is_array($value):
+        $id = $this->testSeenArray($value);
+        if ($id!==false)
         {
-          $this->seen[] = &$value;
+          fwrite($this->handle, Html::generateVoidElement('reference', ['name'     => $name,
+                                                                        'key_type' => $keyType,
+                                                                        'id'       => $id]));
         }
         break;
 
@@ -296,13 +310,11 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If a value has been seen before returns the ID of the variable. Otherwise returns false.
+   * If a value (not an array) has been seen before returns the ID of the variable. Otherwise returns false.
    *
    * @param mixed $value The value.
    *
    * @return int|false
-   *
-   * @throws FallenException
    */
   private function testSeen(&$value)
   {
@@ -318,17 +330,19 @@ class VarDumper
         }
         break;
 
-      case is_array($value):
       case is_string($value):
       case is_int($value):
       case is_double($value):
       case is_resource($value):
         foreach ($this->seen as $id => &$item)
         {
-          $check = self::testReferences($item, $value);
-          if ($check)
+          if (!is_array($item))
           {
-            return $id;
+            $check = self::testReferences($item, $value);
+            if ($check)
+            {
+              return $id;
+            }
           }
         }
         break;
@@ -336,6 +350,38 @@ class VarDumper
       default:
         throw new FallenException('gettype', gettype($value));
     }
+
+    $this->seen[] = &$value;
+
+    return false;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * If an array has been seen before returns the ID of the array. Otherwise returns false.
+   *
+   * @param array $value The value.
+   *
+   * @return int|false
+   */
+  private function testSeenArray(&$value)
+  {
+    foreach ($this->seen as $id => &$item)
+    {
+      if (is_array($item))
+      {
+        $item[$this->gid] = true;
+        $isset            = isset($value[$this->gid]);
+        unset($item[$this->gid]);
+
+        if ($isset)
+        {
+          return $id;
+        }
+      }
+    }
+
+    $this->seen[] = &$value;
 
     return false;
   }
