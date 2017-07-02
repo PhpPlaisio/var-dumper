@@ -336,7 +336,15 @@ class VarDumper
         break;
 
       case is_string($value):
-        $this->dumpString($value, $name);
+        if (strpos($name, 'password')===false)
+        {
+          $this->dumpString($value, $name);
+        }
+        else
+        {
+          // Do not dump the value of a variable/key with a name tha contains 'password'.
+          $this->dumpString(str_repeat('*', 12), $name);
+        }
         break;
 
       case is_object($value):
