@@ -186,7 +186,7 @@ class VarDumper
   /**
    * Dumps null.
    *
-   * @param object $value The null.
+   * @param null   $value The null.
    * @param string $name  The name of the variable.
    */
   private function dumpNull(&$value, $name)
