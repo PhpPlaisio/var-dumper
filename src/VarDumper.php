@@ -336,7 +336,7 @@ class VarDumper
         break;
 
       case is_string($value):
-        if (strpos($name, 'password')===false)
+        if (stripos($name, 'password')===false)
         {
           $this->dumpString($value, $name);
         }
