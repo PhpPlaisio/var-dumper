@@ -92,28 +92,27 @@ class VarDumper
   /**
    * Dumps an array.
    *
-   * @param array  $value   The array.
-   * @param string $name    Variable name.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param array  $value The array.
+   * @param string $name  Variable name.
    */
-  private function dumpArray(&$value, $name, $keyType)
+  private function dumpArray(&$value, $name)
   {
     list($id, $ref) = $this->isReference($value);
 
     if ($ref===null)
     {
-      $this->writer->writeArrayOpen($id, $name, $keyType);
+      $this->writer->writeArrayOpen($id, $name);
 
       foreach ($value as $key => &$item)
       {
-        $this->recursiveDump($item, $key, gettype($key));
+        $this->recursiveDump($item, $key);
       }
 
       $this->writer->writeArrayClose();
     }
     else
     {
-      $this->writer->writeArrayReference($ref, $name, $keyType);
+      $this->writer->writeArrayReference($ref, $name);
     }
   }
 
@@ -121,11 +120,10 @@ class VarDumper
   /**
    * Dumps a boolean.
    *
-   * @param bool   $value   The boolean.
-   * @param string $name    The name of the variable.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param bool   $value The boolean.
+   * @param string $name  The name of the variable.
    */
-  private function dumpBool(&$value, $name, $keyType)
+  private function dumpBool(&$value, $name)
   {
     if ($this->scalarReferences)
     {
@@ -137,18 +135,17 @@ class VarDumper
       $ref = null;
     }
 
-    $this->writer->writeBool($id, $ref, $value, $name, $keyType);
+    $this->writer->writeBool($id, $ref, $value, $name);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Dumps a float.
    *
-   * @param float  $value   The float.
-   * @param string $name    The name of the variable.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param float  $value The float.
+   * @param string $name  The name of the variable.
    */
-  private function dumpFloat(&$value, $name, $keyType)
+  private function dumpFloat(&$value, $name)
   {
     if ($this->scalarReferences)
     {
@@ -160,18 +157,17 @@ class VarDumper
       $ref = null;
     }
 
-    $this->writer->writeFloat($id, $ref, $value, $name, $keyType);
+    $this->writer->writeFloat($id, $ref, $value, $name);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Dumps an integer.
    *
-   * @param int    $value   The integer.
-   * @param string $name    The name of the variable.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param int    $value The integer.
+   * @param string $name  The name of the variable.
    */
-  private function dumpInt(&$value, $name, $keyType)
+  private function dumpInt(&$value, $name)
   {
     if ($this->scalarReferences)
     {
@@ -183,18 +179,17 @@ class VarDumper
       $ref = null;
     }
 
-    $this->writer->writeInt($id, $ref, $value, $name, $keyType);
+    $this->writer->writeInt($id, $ref, $value, $name);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Dumps null.
    *
-   * @param object $value   The null.
-   * @param string $name    The name of the variable.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param object $value The null.
+   * @param string $name  The name of the variable.
    */
-  private function dumpNull(&$value, $name, $keyType)
+  private function dumpNull(&$value, $name)
   {
     if ($this->scalarReferences)
     {
@@ -206,24 +201,23 @@ class VarDumper
       $ref = null;
     }
 
-    $this->writer->writeNull($id, $ref, $name, $keyType);
+    $this->writer->writeNull($id, $ref, $name);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Dumps an object.
    *
-   * @param object $value   The object.
-   * @param string $name    The name of the variable.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param object $value The object.
+   * @param string $name  The name of the variable.
    */
-  private function dumpObject($value, $name, $keyType)
+  private function dumpObject($value, $name)
   {
     list($id, $ref) = $this->isReference($value);
 
     if ($ref===null)
     {
-      $this->writer->writeObjectOpen($id, $name, $keyType, get_class($value));
+      $this->writer->writeObjectOpen($id, $name, get_class($value));
 
       // Dump all fields of the object, unless the object is me.
       if ($this!==$value)
@@ -239,7 +233,7 @@ class VarDumper
     }
     else
     {
-      $this->writer->writeObjectReference($ref, $name, $keyType, get_class($value));
+      $this->writer->writeObjectReference($ref, $name, get_class($value));
     }
   }
 
@@ -247,33 +241,24 @@ class VarDumper
   /**
    * Dumps a resource.
    *
-   * @param resource $value   The resource.
-   * @param string   $name    The name of the variable.
-   * @param string   $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param resource $value The resource.
+   * @param string   $name  The name of the variable.
    */
-  private function dumpResource($value, $name, $keyType)
+  private function dumpResource($value, $name)
   {
     list($id, $ref) = $this->isReference($value);
 
-    if ($ref===null)
-    {
-      $this->writer->writeResource($id, $name, $keyType, get_resource_type($value));
-    }
-    else
-    {
-      $this->writer->writeResourceReference($ref, $name, $keyType, get_resource_type($value));
-    }
+    $this->writer->writeResource($id, $ref, $name, get_resource_type($value));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Dumps a string.
    *
-   * @param string $value   The string.
-   * @param string $name    The name of the variable.
-   * @param string $keyType When the name of the variable is key of an array the type of the key (integer or string).
+   * @param string $value The string.
+   * @param string $name  The name of the variable.
    */
-  private function dumpString(&$value, $name, $keyType)
+  private function dumpString(&$value, $name)
   {
     if ($this->scalarReferences)
     {
@@ -285,7 +270,7 @@ class VarDumper
       $ref = null;
     }
 
-    $this->writer->writeString($id, $ref, $value, $name, $keyType);
+    $this->writer->writeString($id, $ref, $value, $name);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -327,45 +312,43 @@ class VarDumper
   /**
    * Dumps recursively a variable.
    *
-   * @param mixed       $value   The variable.
-   * @param string      $name    Variable The name of the variable.
-   * @param string|null $keyType When the name of the variable is key of an array the type of the key (integer or
-   *                             string).
+   * @param mixed  $value The variable.
+   * @param string $name  Variable The name of the variable.
    */
-  private function recursiveDump(&$value, $name, $keyType=null)
+  private function recursiveDump(&$value, $name)
   {
     switch (true)
     {
       case is_null($value):
-        $this->dumpNull($value, $name, $keyType);
+        $this->dumpNull($value, $name);
         break;
 
       case is_bool($value):
-        $this->dumpBool($value, $name, $keyType);
+        $this->dumpBool($value, $name);
         break;
 
       case is_float($value):
-        $this->dumpFloat($value, $name, $keyType);
+        $this->dumpFloat($value, $name);
         break;
 
       case is_int($value):
-        $this->dumpInt($value, $name, $keyType);
+        $this->dumpInt($value, $name);
         break;
 
       case is_string($value):
-        $this->dumpString($value, $name, $keyType);
+        $this->dumpString($value, $name);
         break;
 
       case is_object($value):
-        $this->dumpObject($value, $name, $keyType);
+        $this->dumpObject($value, $name);
         break;
 
       case is_array($value):
-        $this->dumpArray($value, $name, $keyType);
+        $this->dumpArray($value, $name);
         break;
 
       case is_resource($value):
-        $this->dumpResource($value, $name, $keyType);
+        $this->dumpResource($value, $name);
         break;
 
       default:

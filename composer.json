@@ -10,7 +10,7 @@
   "license": "MIT",
   "require": {
     "php": ">=7.0.0",
-    "setbased/abc-var-dumper-writer": "^0.9.0",
+    "setbased/abc-var-dumper-writer": "^0.9.1",
     "setbased/exception": "^1.0.0"
   },
   "autoload": {
