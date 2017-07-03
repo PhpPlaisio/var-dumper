@@ -42,6 +42,44 @@ class VarDumper
   //--------------------------------------------------------------------------------------------------------------------
 
   /**
+   * Returns a reference to a nonstatic property of an object.
+   *
+   * @param object $object   The object.
+   * @param string $property The name of the property.
+   *
+   * @return mixed
+   */
+  private static function &getProperty($object, $property)
+  {
+    $value = &\Closure::bind(function & () use ($property)
+    {
+      return $this->$property;
+    }, $object, $object)->__invoke();
+
+    return $value;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns a reference to a static property of an object.
+   *
+   * @param object $object   The object.
+   * @param string $property The name of the property.
+   *
+   * @return mixed
+   */
+  private static function &getStaticProperty($object, $property)
+  {
+    $value = &\Closure::bind(function & () use ($property)
+    {
+      return self::$$property;
+    }, $object, $object)->__invoke();
+
+    return $value;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Returns true if and only if two variables are references to the same variable content.
    *
    * @param mixed $first  The first variable.
@@ -108,7 +146,7 @@ class VarDumper
         $this->recursiveDump($item, $key);
       }
 
-      $this->writer->writeArrayClose();
+      $this->writer->writeArrayClose($id, $name);
     }
     else
     {
@@ -222,14 +260,31 @@ class VarDumper
       // Dump all fields of the object, unless the object is me.
       if ($this!==$value)
       {
-        $properties = get_object_vars($value);
-        foreach ($properties as $key => &$item)
+        $reflect    = new \ReflectionClass($value);
+        $properties = $reflect->getProperties(\ReflectionProperty::IS_PUBLIC |
+                                              \ReflectionProperty::IS_PROTECTED |
+                                              \ReflectionProperty::IS_PRIVATE);
+
+        if (strpos(get_class($value), '\\')!==false)
         {
-          $this->recursiveDump($item, $key);
+          foreach ($properties as $property)
+          {
+            $propertyName = $property->getName();
+            if ($property->isStatic())
+            {
+              $propertyValue = &self::getStaticProperty($value, $propertyName);
+            }
+            else
+            {
+              $propertyValue = &self::getProperty($value, $propertyName);
+            }
+
+            $this->recursiveDump($propertyValue, $propertyName);
+          }
         }
       }
 
-      $this->writer->writeObjectClose();
+      $this->writer->writeObjectClose($id, $name, get_class($value));
     }
     else
     {
@@ -290,9 +345,12 @@ class VarDumper
       case is_int($value):
       case is_string($value):
       case is_double($value):
-      case is_object($value):
       case is_resource($value):
         $ref = $this->testSeen($value);
+        break;
+
+      case is_object($value):
+        $ref = $this->testSeenObject($value);
         break;
 
       case is_array($value):
@@ -376,16 +434,6 @@ class VarDumper
   {
     switch (true)
     {
-      case is_object($value):
-        foreach ($this->seen as $ref => $item)
-        {
-          if ($item===$value)
-          {
-            return $ref;
-          }
-        }
-        break;
-
       case is_bool($value):
       case is_double($value):
       case is_int($value):
@@ -394,7 +442,7 @@ class VarDumper
       case is_string($value):
         foreach ($this->seen as $ref => &$item)
         {
-          if (!is_array($item))
+          if (!is_array($item) && !is_object($item))
           {
             $check = self::testReferences($item, $value);
             if ($check)
@@ -442,6 +490,29 @@ class VarDumper
     unset($value[$this->gid]);
 
     $this->seen[] = &$value;
+
+    return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * If an object has been seen before returns the ID of the variable. Otherwise returns null.
+   *
+   * @param object $value The value.
+   *
+   * @return int|null
+   */
+  private function testSeenObject($value)
+  {
+    foreach ($this->seen as $ref => $item)
+    {
+      if (is_object($item) && $item===$value)
+      {
+        return $ref;
+      }
+    }
+
+    $this->seen[] = $value;
 
     return null;
   }
