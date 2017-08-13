@@ -40,9 +40,8 @@ class VarDumper
   private $seen;
 
   //--------------------------------------------------------------------------------------------------------------------
-
   /**
-   * Returns a reference to a nonstatic property of an object.
+   * Returns a reference to a non static property of an object.
    *
    * @param object $object   The object.
    * @param string $property The name of the property.
