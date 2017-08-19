@@ -400,7 +400,8 @@ class VarDumper
         else
         {
           // Do not dump the value of a variable/key with a name tha contains 'password'.
-          $this->dumpString(str_repeat('*', 12), $name);
+          $tmp = str_repeat('*', 12);
+          $this->dumpString($tmp, $name);
         }
         break;
 
