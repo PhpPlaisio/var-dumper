@@ -12,13 +12,6 @@ class VarDumper
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The object for rendering the var dump is the desired output format.
-   *
-   * @var VarWriter
-   */
-  public $writer;
-
-  /**
    * A unique string that is not key in any array.
    *
    * @var string
@@ -39,6 +32,24 @@ class VarDumper
    */
   private $seen;
 
+  /**
+   * The object for rendering the var dump in the desired output format.
+   *
+   * @var VarWriter
+   */
+  private $writer;
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Object constructor.
+   *
+   * @param VarWriter $writer The object for rendering the var dump in the desired output format.
+   */
+  public function __construct($writer)
+  {
+    $this->writer = $writer;
+  }
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Returns a reference to a non static property of an object.
@@ -50,8 +61,7 @@ class VarDumper
    */
   private static function &getProperty($object, $property)
   {
-    $value = &\Closure::bind(function & () use ($property)
-    {
+    $value = &\Closure::bind(function & () use ($property) {
       return $this->$property;
     }, $object, $object)->__invoke();
 
@@ -69,8 +79,7 @@ class VarDumper
    */
   private static function &getStaticProperty($object, $property)
   {
-    $value = &\Closure::bind(function & () use ($property)
-    {
+    $value = &\Closure::bind(function & () use ($property) {
       return self::$$property;
     }, $object, $object)->__invoke();
 

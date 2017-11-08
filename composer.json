@@ -9,12 +9,24 @@
   "license": "MIT",
   "require": {
     "php": ">=7.0.0",
-    "setbased/abc-var-dumper-writer": "^0.9.3",
+    "setbased/abc-var-dumper-writer": "^1.0.0",
     "setbased/exception": "^1.0.0"
+  },
+  "require-dev": {
+    "phing/phing": "^2.0.0",
+    "phpunit/phpunit": "^6.0.0"
   },
   "autoload": {
     "psr-4": {
       "SetBased\\Abc\\Debug\\": "src/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "SetBased\\Abc\\ErrorLogger\\Test\\": "test/"
+    }
+  },
+  "config": {
+    "bin-dir": "bin/"
   }
 }
