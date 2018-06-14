@@ -1,5 +1,5 @@
 <?php
-//----------------------------------------------------------------------------------------------------------------------
+
 namespace SetBased\Abc\Debug;
 
 use SetBased\Exception\FallenException;
@@ -40,12 +40,13 @@ class VarDumper
   private $writer;
 
   //--------------------------------------------------------------------------------------------------------------------
+
   /**
    * Object constructor.
    *
    * @param VarWriter $writer The object for rendering the var dump in the desired output format.
    */
-  public function __construct($writer)
+  public function __construct(VarWriter $writer)
   {
     $this->writer = $writer;
   }
@@ -59,7 +60,7 @@ class VarDumper
    *
    * @return mixed
    */
-  private static function &getProperty($object, $property)
+  private static function &getProperty($object, string $property)
   {
     $value = &\Closure::bind(function & () use ($property) {
       return $this->$property;
@@ -77,7 +78,7 @@ class VarDumper
    *
    * @return mixed
    */
-  private static function &getStaticProperty($object, $property)
+  private static function &getStaticProperty($object, string $property)
   {
     $value = &\Closure::bind(function & () use ($property) {
       return self::$$property;
@@ -95,7 +96,7 @@ class VarDumper
    *
    * @return bool
    */
-  private static function testReferences(&$first, &$second)
+  private static function testReferences(&$first, &$second): bool
   {
     if ($first!==$second)
     {
@@ -121,7 +122,7 @@ class VarDumper
    * @api
    * @since 1.0.0
    */
-  public function dump($name, &$value, $scalarReferences = false)
+  public function dump(string $name, &$value, bool $scalarReferences = false): void
   {
     $this->seen             = [];
     $this->scalarReferences = $scalarReferences;
@@ -141,7 +142,7 @@ class VarDumper
    * @param array  $value The array.
    * @param string $name  Variable name.
    */
-  private function dumpArray(&$value, $name)
+  private function dumpArray(array &$value, string $name): void
   {
     list($id, $ref) = $this->isReference($value);
 
@@ -169,7 +170,7 @@ class VarDumper
    * @param bool   $value The boolean.
    * @param string $name  The name of the variable.
    */
-  private function dumpBool(&$value, $name)
+  private function dumpBool(bool &$value, string $name): void
   {
     if ($this->scalarReferences)
     {
@@ -191,7 +192,7 @@ class VarDumper
    * @param float  $value The float.
    * @param string $name  The name of the variable.
    */
-  private function dumpFloat(&$value, $name)
+  private function dumpFloat(float &$value, string $name): void
   {
     if ($this->scalarReferences)
     {
@@ -213,7 +214,7 @@ class VarDumper
    * @param int    $value The integer.
    * @param string $name  The name of the variable.
    */
-  private function dumpInt(&$value, $name)
+  private function dumpInt(int &$value, string $name): void
   {
     if ($this->scalarReferences)
     {
@@ -235,7 +236,7 @@ class VarDumper
    * @param null   $value The null.
    * @param string $name  The name of the variable.
    */
-  private function dumpNull(&$value, $name)
+  private function dumpNull(&$value, string $name): void
   {
     if ($this->scalarReferences)
     {
@@ -257,7 +258,7 @@ class VarDumper
    * @param object $value The object.
    * @param string $name  The name of the variable.
    */
-  private function dumpObject($value, $name)
+  private function dumpObject($value, string $name): void
   {
     list($id, $ref) = $this->isReference($value);
 
@@ -307,7 +308,7 @@ class VarDumper
    * @param resource $value The resource.
    * @param string   $name  The name of the variable.
    */
-  private function dumpResource($value, $name)
+  private function dumpResource($value, string $name): void
   {
     list($id, $ref) = $this->isReference($value);
 
@@ -321,7 +322,7 @@ class VarDumper
    * @param string $value The string.
    * @param string $name  The name of the variable.
    */
-  private function dumpString(&$value, $name)
+  private function dumpString(string &$value, string $name): void
   {
     if ($this->scalarReferences)
     {
@@ -344,7 +345,7 @@ class VarDumper
    *
    * @return array<int|null>
    */
-  private function isReference(&$value)
+  private function isReference(&$value): array
   {
     switch (true)
     {
@@ -381,7 +382,7 @@ class VarDumper
    * @param mixed  $value The variable.
    * @param string $name  Variable The name of the variable.
    */
-  private function recursiveDump(&$value, $name)
+  private function recursiveDump(&$value, string $name): void
   {
     switch (true)
     {
@@ -439,7 +440,7 @@ class VarDumper
    *
    * @return int|null
    */
-  private function testSeen(&$value)
+  private function testSeen(&$value): ?int
   {
     switch (true)
     {
@@ -479,7 +480,7 @@ class VarDumper
    *
    * @return int|null
    */
-  private function testSeenArray(&$value)
+  private function testSeenArray(array &$value): ?int
   {
     $value[$this->gid] = true;
 
@@ -511,7 +512,7 @@ class VarDumper
    *
    * @return int|null
    */
-  private function testSeenObject($value)
+  private function testSeenObject($value): ?int
   {
     foreach ($this->seen as $ref => $item)
     {

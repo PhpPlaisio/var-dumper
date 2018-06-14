@@ -8,8 +8,8 @@
   ],
   "license": "MIT",
   "require": {
-    "php": ">=7.0.0",
-    "setbased/abc-var-dumper-writer": "^1.0.0",
+    "php": ">=7.1.0",
+    "setbased/abc-var-dumper-writer": "^2.0.0",
     "setbased/exception": "^1.0.0"
   },
   "require-dev": {
