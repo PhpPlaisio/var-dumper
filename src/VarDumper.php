@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SetBased\Abc\Debug;
 
@@ -28,7 +29,7 @@ class VarDumper
   /**
    * The variables that we have dumped so var.
    *
-   * @var \mixed[]
+   * @var array
    */
   private $seen;
 
@@ -114,18 +115,18 @@ class VarDumper
   /**
    * Main function for dumping.
    *
-   * @param string $name             The name of the variable.
-   * @param mixed  $value            Variable for dumping.
-   * @param bool   $scalarReferences If true scalar references to values must be traced.
+   * @param string|int|null $name             The name of the variable.
+   * @param mixed           $value            Value to be dumped.
+   * @param bool            $scalarReferences If true scalar references to values must be traced.
    *
    * @api
    * @since 1.0.0
    */
-  public function dump(string $name, &$value, bool $scalarReferences = false): void
+  public function dump($name, &$value, bool $scalarReferences = false): void
   {
     $this->seen             = [];
     $this->scalarReferences = $scalarReferences;
-    $this->gid              = uniqid(mt_rand(), true);
+    $this->gid              = uniqid((string)mt_rand(), true);
 
     $this->writer->start();
 
@@ -138,10 +139,10 @@ class VarDumper
   /**
    * Dumps an array.
    *
-   * @param array  $value The array.
-   * @param string $name  Variable name.
+   * @param array           $value The array.
+   * @param string|int|null $name  Variable name.
    */
-  private function dumpArray(array &$value, string $name): void
+  private function dumpArray(array &$value, $name): void
   {
     list($id, $ref) = $this->isReference($value);
 
@@ -151,7 +152,7 @@ class VarDumper
 
       foreach ($value as $key => &$item)
       {
-        $this->recursiveDump($item, (string)$key);
+        $this->recursiveDump($item, $key);
       }
 
       $this->writer->writeArrayClose($id, $name);
@@ -166,10 +167,10 @@ class VarDumper
   /**
    * Dumps a boolean.
    *
-   * @param bool   $value The boolean.
-   * @param string $name  The name of the variable.
+   * @param bool            $value The boolean.
+   * @param string|int|null $name  The name of the variable.
    */
-  private function dumpBool(bool &$value, string $name): void
+  private function dumpBool(bool &$value, $name): void
   {
     if ($this->scalarReferences)
     {
@@ -188,10 +189,10 @@ class VarDumper
   /**
    * Dumps a float.
    *
-   * @param float  $value The float.
-   * @param string $name  The name of the variable.
+   * @param float           $value The float.
+   * @param string|int|null $name  The name of the variable.
    */
-  private function dumpFloat(float &$value, string $name): void
+  private function dumpFloat(float &$value, $name): void
   {
     if ($this->scalarReferences)
     {
@@ -210,10 +211,10 @@ class VarDumper
   /**
    * Dumps an integer.
    *
-   * @param int    $value The integer.
-   * @param string $name  The name of the variable.
+   * @param int             $value The integer.
+   * @param string|int|null $name  The name of the variable.
    */
-  private function dumpInt(int &$value, string $name): void
+  private function dumpInt(int &$value, $name): void
   {
     if ($this->scalarReferences)
     {
@@ -232,10 +233,10 @@ class VarDumper
   /**
    * Dumps null.
    *
-   * @param null   $value The null.
-   * @param string $name  The name of the variable.
+   * @param null            $value The null.
+   * @param string|int|null $name  The name of the variable.
    */
-  private function dumpNull(&$value, string $name): void
+  private function dumpNull(&$value, $name): void
   {
     if ($this->scalarReferences)
     {
@@ -254,10 +255,10 @@ class VarDumper
   /**
    * Dumps an object.
    *
-   * @param object $value The object.
-   * @param string $name  The name of the variable.
+   * @param object          $value The object.
+   * @param string|int|null $name  The name of the variable.
    */
-  private function dumpObject($value, string $name): void
+  private function dumpObject($value, $name): void
   {
     list($id, $ref) = $this->isReference($value);
 
@@ -290,7 +291,7 @@ class VarDumper
         }
         elseif (get_class($value)=='stdClass')
         {
-          foreach($value as $propertyName => $propertyValue)
+          foreach ($value as $propertyName => $propertyValue)
           {
             $this->recursiveDump($propertyValue, $propertyName);
           }
@@ -312,7 +313,7 @@ class VarDumper
    * @param resource $value The resource.
    * @param string   $name  The name of the variable.
    */
-  private function dumpResource($value, string $name): void
+  private function dumpResource($value, $name): void
   {
     list($id, $ref) = $this->isReference($value);
 
@@ -323,10 +324,10 @@ class VarDumper
   /**
    * Dumps a string.
    *
-   * @param string $value The string.
-   * @param string $name  The name of the variable.
+   * @param string          $value The string.
+   * @param string|int|null $name  The name of the variable.
    */
-  private function dumpString(string &$value, string $name): void
+  private function dumpString(string &$value, $name): void
   {
     if ($this->scalarReferences)
     {
@@ -383,12 +384,10 @@ class VarDumper
   /**
    * Dumps recursively a variable.
    *
-   * @param mixed  $value The variable.
-   * @param string $name  Variable The name of the variable.
-   *
-   * @throws \ReflectionException
+   * @param mixed           $value The value.
+   * @param string|int|null $name  Variable The name of the variable.
    */
-  private function recursiveDump(&$value, string $name): void
+  private function recursiveDump(&$value, $name): void
   {
     switch (true)
     {
@@ -409,15 +408,15 @@ class VarDumper
         break;
 
       case is_string($value):
-        if (stripos($name, 'password')===false)
-        {
-          $this->dumpString($value, $name);
-        }
-        else
+        if (is_string($name) && stripos($name, 'password')!==false)
         {
           // Do not dump the value of a variable/key with a name tha contains 'password'.
           $tmp = str_repeat('*', 12);
           $this->dumpString($tmp, $name);
+        }
+        else
+        {
+          $this->dumpString($value, $name);
         }
         break;
 
