@@ -40,7 +40,6 @@ class VarDumper
   private $writer;
 
   //--------------------------------------------------------------------------------------------------------------------
-
   /**
    * Object constructor.
    *
@@ -152,7 +151,7 @@ class VarDumper
 
       foreach ($value as $key => &$item)
       {
-        $this->recursiveDump($item, $key);
+        $this->recursiveDump($item, (string)$key);
       }
 
       $this->writer->writeArrayClose($id, $name);
@@ -270,9 +269,7 @@ class VarDumper
       if ($this!==$value)
       {
         $reflect    = new \ReflectionClass($value);
-        $properties = $reflect->getProperties(\ReflectionProperty::IS_PUBLIC |
-                                              \ReflectionProperty::IS_PROTECTED |
-                                              \ReflectionProperty::IS_PRIVATE);
+        $properties = $reflect->getProperties();
 
         if (strpos(get_class($value), '\\')!==false)
         {
@@ -288,6 +285,13 @@ class VarDumper
               $propertyValue = &self::getProperty($value, $propertyName);
             }
 
+            $this->recursiveDump($propertyValue, $propertyName);
+          }
+        }
+        elseif (get_class($value)=='stdClass')
+        {
+          foreach($value as $propertyName => $propertyValue)
+          {
             $this->recursiveDump($propertyValue, $propertyName);
           }
         }
@@ -381,6 +385,8 @@ class VarDumper
    *
    * @param mixed  $value The variable.
    * @param string $name  Variable The name of the variable.
+   *
+   * @throws \ReflectionException
    */
   private function recursiveDump(&$value, string $name): void
   {
