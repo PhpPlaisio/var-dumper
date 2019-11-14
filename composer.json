@@ -1,15 +1,15 @@
 {
-  "name": "setbased/abc-var-dumper",
-  "description": "ABC-Framework: Var Dumper",
+  "name": "plaisio/var-dumper",
+  "description": "PhpPlaisio: Var Dumper",
   "keywords": [
-    "ABC-Framework",
+    "PhpPlaisio",
     "Var",
     "Dumper"
   ],
   "license": "MIT",
   "require": {
     "php": ">=7.1.0",
-    "setbased/abc-var-dumper-writer": "^3.0.0",
+    "plaisio/var-dumper-writer": "^4.0.0",
     "setbased/exception": "^2.0.0"
   },
   "require-dev": {
@@ -17,12 +17,12 @@
   },
   "autoload": {
     "psr-4": {
-      "SetBased\\Abc\\Debug\\": "src/"
+      "Plaisio\\Debug\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "SetBased\\Abc\\ErrorLogger\\Test\\": "test/"
+      "Plaisio\\Debug\\Test\\": "test/"
     }
   },
   "config": {

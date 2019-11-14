@@ -1,4 +1,4 @@
-# ABC-Framework: Var Dumper
+# PhpPlaisio: Var Dumper
 
 <table>
 <thead>
@@ -12,17 +12,24 @@
 <tbody>
 <tr>
 <td>
-<a href="https://gitter.im/SetBased/php-abc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge"><img src="https://badges.gitter.im/SetBased/php-abc.svg" alt="Gitter"/></a>
+<a href="https://gitter.im/PhpPlaisio/PhpPlaisio"><img src="https://badges.gitter.im/PhpPlaisio/PhpPlaisio.svg" alt="Gitter"/></a>
 </td>
 <td>
-<a href="https://packagist.org/packages/setbased/abc-var-dumper"><img src="https://poser.pugx.org/setbased/abc-var-dumper/license" alt="License"/></a>
+<a href="https://packagist.org/packages/plaisio/var-dumper"><img src="https://poser.pugx.org/plaisio/var-dumper/license" alt="License"/></a>
 </td>
 <td>
-<a href="https://packagist.org/packages/setbased/abc-var-dumper"><img src="https://poser.pugx.org/setbased/abc-var-dumper/v/stable" alt="Latest Stable Version"/></a>
+<a href="https://packagist.org/packages/plaisio/var-dumper"><img src="https://poser.pugx.org/plaisio/var-dumper/v/stable" alt="Latest Stable Version"/></a>
 </td>
 <td>
-<a href="https://scrutinizer-ci.com/g/SetBased/php-abc-var-dumper/?branch=master"><img src="https://scrutinizer-ci.com/g/SetBased/php-abc-var-dumper/badges/quality-score.png?b=master" alt="Scrutinizer Code Quality"/></a>
+<a href="https://scrutinizer-ci.com/g/PhpPlaisio/var-dumper/?branch=master"><img src="https://scrutinizer-ci.com/g/PhpPlaisio/var-dumper/badges/quality-score.png?b=master" alt="Scrutinizer Code Quality"/></a>
 </td>
 </tr>
 </tbody>
-</table>
+</table> 
+
+# License
+
+This project is licensed under the MIT license.
+
+
+

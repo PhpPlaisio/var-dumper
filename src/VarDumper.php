@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace SetBased\Abc\Debug;
+namespace Plaisio\Debug;
 
 use SetBased\Exception\FallenException;
 
