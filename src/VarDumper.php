@@ -41,6 +41,7 @@ class VarDumper
   private $writer;
 
   //--------------------------------------------------------------------------------------------------------------------
+
   /**
    * Object constructor.
    *
@@ -144,7 +145,7 @@ class VarDumper
    */
   private function dumpArray(array &$value, $name): void
   {
-    list($id, $ref) = $this->isReference($value);
+    [$id, $ref] = $this->isReference($value);
 
     if ($ref===null)
     {
@@ -174,7 +175,7 @@ class VarDumper
   {
     if ($this->scalarReferences)
     {
-      list($id, $ref) = $this->isReference($value);
+      [$id, $ref] = $this->isReference($value);
     }
     else
     {
@@ -196,7 +197,7 @@ class VarDumper
   {
     if ($this->scalarReferences)
     {
-      list($id, $ref) = $this->isReference($value);
+      [$id, $ref] = $this->isReference($value);
     }
     else
     {
@@ -218,7 +219,7 @@ class VarDumper
   {
     if ($this->scalarReferences)
     {
-      list($id, $ref) = $this->isReference($value);
+      [$id, $ref] = $this->isReference($value);
     }
     else
     {
@@ -240,7 +241,7 @@ class VarDumper
   {
     if ($this->scalarReferences)
     {
-      list($id, $ref) = $this->isReference($value);
+      [$id, $ref] = $this->isReference($value);
     }
     else
     {
@@ -260,7 +261,7 @@ class VarDumper
    */
   private function dumpObject($value, $name): void
   {
-    list($id, $ref) = $this->isReference($value);
+    [$id, $ref] = $this->isReference($value);
 
     if ($ref===null)
     {
@@ -269,32 +270,13 @@ class VarDumper
       // Dump all fields of the object, unless the object is me.
       if ($this!==$value)
       {
-        $reflect    = new \ReflectionClass($value);
-        $properties = $reflect->getProperties();
-
         if (strpos(get_class($value), '\\')!==false)
         {
-          foreach ($properties as $property)
-          {
-            $propertyName = $property->getName();
-            if ($property->isStatic())
-            {
-              $propertyValue = &self::getStaticProperty($value, $propertyName);
-            }
-            else
-            {
-              $propertyValue = &self::getProperty($value, $propertyName);
-            }
-
-            $this->recursiveDump($propertyValue, $propertyName);
-          }
+          $this->dumpObjectUserDefinedClass($value);
         }
-        elseif (get_class($value)=='stdClass')
+        elseif (get_class($value)==='stdClass')
         {
-          foreach ($value as $propertyName => $propertyValue)
-          {
-            $this->recursiveDump($propertyValue, $propertyName);
-          }
+          $this->dumpObjectStdClass($value);
         }
       }
 
@@ -308,6 +290,70 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Dumps properties set with magic getter and property annotations.
+   *
+   * @param object $value The object.
+   */
+  private function dumpObjectMagicProperties(object $value): void
+  {
+    $reflection  = new \ReflectionClass($value);
+    $reflections = $this->extractClassesOfClass($reflection);
+    $properties  = $this->extractProperties($reflections);
+    sort($properties, SORT_STRING | SORT_FLAG_CASE);
+
+    foreach ($properties as $property)
+    {
+      if (isset($value->$property))
+      {
+        $this->recursiveDump($value->$property, $property);
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps the properties of a stdClass.
+   *
+   * @param object $value The object.
+   */
+  private function dumpObjectStdClass(object $value): void
+  {
+    foreach ($value as $propertyName => $propertyValue)
+    {
+      $this->recursiveDump($propertyValue, $propertyName);
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Dumps the properties of a user defined class.
+   *
+   * @param object $value The object.
+   */
+  private function dumpObjectUserDefinedClass(object $value): void
+  {
+    $reflect    = new \ReflectionClass($value);
+    $properties = $reflect->getProperties();
+    foreach ($properties as $property)
+    {
+      $propertyName = $property->getName();
+      if ($property->isStatic())
+      {
+        $propertyValue = &self::getStaticProperty($value, $propertyName);
+      }
+      else
+      {
+        $propertyValue = &self::getProperty($value, $propertyName);
+      }
+
+      $this->recursiveDump($propertyValue, $propertyName);
+    }
+
+    $this->dumpObjectMagicProperties($value);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Dumps a resource.
    *
    * @param resource $value The resource.
@@ -315,7 +361,7 @@ class VarDumper
    */
   private function dumpResource($value, $name): void
   {
-    list($id, $ref) = $this->isReference($value);
+    [$id, $ref] = $this->isReference($value);
 
     $this->writer->writeResource($id, $ref, $name, get_resource_type($value));
   }
@@ -331,7 +377,7 @@ class VarDumper
   {
     if ($this->scalarReferences)
     {
-      list($id, $ref) = $this->isReference($value);
+      [$id, $ref] = $this->isReference($value);
     }
     else
     {
@@ -340,6 +386,67 @@ class VarDumper
     }
 
     $this->writer->writeString($id, $ref, $value, $name);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the reflections of a class, trait or interface, its parent classes, and implemented interfaces.
+   *
+   * @param \ReflectionClass $reflection The reflection of the class, trait or interface.
+   *
+   * @return \ReflectionClass[]
+   */
+  private function extractClassesOfClass(\ReflectionClass $reflection): array
+  {
+    $reflections   = [];
+    $reflections[] = $reflection;
+
+    $parent = $reflection->getParentClass();
+    if ($parent!==false)
+    {
+      $reflections = array_merge($reflections, $this->extractClassesOfClass($parent));
+    }
+
+    $traits = $reflection->getTraits();
+    foreach ($traits as $trait)
+    {
+      $reflections = array_merge($reflections, $this->extractClassesOfClass($trait));
+    }
+
+    $interfaces = $reflection->getInterfaces();
+    foreach ($interfaces as $interface)
+    {
+      $reflections = array_merge($reflections, $this->extractClassesOfClass($interface));
+    }
+
+    return $reflections;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns all property names properties set with magic getter and property annotations.
+   *
+   * @param \ReflectionClass[] $reflections The reflections.
+   *
+   * @return string[]
+   */
+  private function extractProperties(array $reflections): array
+  {
+    $properties = [];
+
+    foreach ($reflections as $reflection)
+    {
+      $comment = $reflection->getDocComment();
+
+      $pattern = '/@property(-read|-write) .* \$(?<name>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/';
+      preg_match_all($pattern, $comment, $matches, PREG_SET_ORDER);
+      foreach ($matches as $match)
+      {
+        $properties[] = $match['name'];
+      }
+    }
+
+    return array_unique($properties);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
