@@ -41,7 +41,6 @@ class VarDumper
   private $writer;
 
   //--------------------------------------------------------------------------------------------------------------------
-
   /**
    * Object constructor.
    *
@@ -259,7 +258,7 @@ class VarDumper
    * @param object          $value The object.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpObject($value, $name): void
+  private function dumpObject(object $value, $name): void
   {
     [$id, $ref] = $this->isReference($value);
 
@@ -437,12 +436,14 @@ class VarDumper
     foreach ($reflections as $reflection)
     {
       $comment = $reflection->getDocComment();
-
-      $pattern = '/@property(-read|-write) .* \$(?<name>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/';
-      preg_match_all($pattern, $comment, $matches, PREG_SET_ORDER);
-      foreach ($matches as $match)
+      if ($comment!==false)
       {
-        $properties[] = $match['name'];
+        $pattern = '/@property(-read|-write) .* \$(?<name>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/';
+        preg_match_all($pattern, $comment, $matches, PREG_SET_ORDER);
+        foreach ($matches as $match)
+        {
+          $properties[] = $match['name'];
+        }
       }
     }
 
