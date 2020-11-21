@@ -68,7 +68,7 @@ class VarDumper
         return $this->$property;
       }, $object, $object)->__invoke();
     }
-    catch (\Throwable $exception)
+    catch (\Error $exception)
     {
       $value = null;
     }
@@ -93,7 +93,7 @@ class VarDumper
         return self::$$property;
       }, $object, $object)->__invoke();
     }
-    catch (\Throwable $exception)
+    catch (\Error $exception)
     {
       $value = null;
     }
