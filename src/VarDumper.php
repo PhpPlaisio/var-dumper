@@ -60,11 +60,18 @@ class VarDumper
    *
    * @return mixed
    */
-  private static function &getProperty($object, string $property)
+  private static function &getProperty(object $object, string $property)
   {
-    $value = &\Closure::bind(function & () use ($property) {
-      return $this->$property;
-    }, $object, $object)->__invoke();
+    try
+    {
+      $value = &\Closure::bind(function & () use ($property) {
+        return $this->$property;
+      }, $object, $object)->__invoke();
+    }
+    catch (\Throwable $exception)
+    {
+      $value = null;
+    }
 
     return $value;
   }
@@ -78,11 +85,18 @@ class VarDumper
    *
    * @return mixed
    */
-  private static function &getStaticProperty($object, string $property)
+  private static function &getStaticProperty(object $object, string $property)
   {
-    $value = &\Closure::bind(function & () use ($property) {
-      return self::$$property;
-    }, $object, $object)->__invoke();
+    try
+    {
+      $value = &\Closure::bind(function & () use ($property) {
+        return self::$$property;
+      }, $object, $object)->__invoke();
+    }
+    catch (\Throwable $exception)
+    {
+      $value = null;
+    }
 
     return $value;
   }
@@ -355,8 +369,8 @@ class VarDumper
   /**
    * Dumps a resource.
    *
-   * @param resource $value The resource.
-   * @param string   $name  The name of the variable.
+   * @param resource        $value The resource.
+   * @param string|int|null $name  The name of the variable.
    */
   private function dumpResource($value, $name): void
   {
