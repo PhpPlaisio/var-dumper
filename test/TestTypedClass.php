@@ -13,29 +13,31 @@ namespace Plaisio\Debug\Test;
  * @property-read bool   $propertyFalse
  * @property-read null   $propertyNull
  */
-class TestTypedClass
+class TestTypedClass extends TestTypedParentClass
 {
   //--------------------------------------------------------------------------------------------------------------------
   use TestTrait;
 
   //--------------------------------------------------------------------------------------------------------------------
-  private bool $false = false;
 
-  private float $float = 3.14;
+  private bool $refFalse;
 
-  private int $int = 1;
+  private float $refFloat;
 
-  private ?TestTypedClass $null = null;
+  private int $refInt;
 
-  private string $password = 'qwerty';
+  private ?TestTypedClass $refNull;
 
-  private \resource $resource;
+  private $refResource;
 
-  private string $string = 'Hello, World!';
+  private string $refString;
 
-  private bool $true = true;
+  private bool $refTrue;
+
+  private string $void;
 
   //--------------------------------------------------------------------------------------------------------------------
+
   /**
    * TestClass constructor.
    */
@@ -48,8 +50,16 @@ class TestTypedClass
     $this->propertyFalse  = false;
     $this->propertyNull   = null;
 
+    $this->refInt      = &$this->int;
+    $this->refFloat    = &$this->float;
+    $this->refString   = &$this->string;
+    $this->refTrue     = &$this->true;
+    $this->refFalse    = &$this->false;
+    $this->refNull     = &$this->null;
+    $this->refResource = &$this->resource;
+
     $this->resource       = fopen('php://stdin', 'r');
-  //  self::$staticResource = &$this->resource;
+    self::$staticResource = &$this->resource;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

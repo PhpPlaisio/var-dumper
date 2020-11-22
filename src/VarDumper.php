@@ -41,7 +41,6 @@ class VarDumper
   private $writer;
 
   //--------------------------------------------------------------------------------------------------------------------
-
   /**
    * Object constructor.
    *
@@ -71,7 +70,8 @@ class VarDumper
     }
     catch (\Error $exception)
     {
-      $value = null;
+      // Property in an uninitialized typed property.
+      $value = Uninitialized::get();
     }
 
     return $value;
@@ -96,7 +96,8 @@ class VarDumper
     }
     catch (\Error $exception)
     {
-      $value = null;
+      // Property in an uninitialized typed property.
+      $value = Uninitialized::get();
     }
 
     return $value;
@@ -106,24 +107,26 @@ class VarDumper
   /**
    * Returns true if and only if two variables are references to the same variable content.
    *
-   * @param mixed $first  The first variable.
-   * @param mixed $second The second variable.
+   * @param mixed $variable1 The first variable.
+   * @param mixed $variable2 The second variable.
+   * @param mixed $value1    The first alternative value.
+   * @param mixed $value2    The second alternative value.
    *
    * @return bool
    */
-  private static function testReferences(&$first, &$second): bool
+  private static function testReferences(&$variable1, &$variable2, $value1, $value2): bool
   {
-    if ($first!==$second)
+    if ($variable1!==$variable2)
     {
       return false;
     }
 
-    $value_of_first = $first;
-    $first          = ($first===true) ? false : true;
-    $is_ref         = ($first===$second);
-    $first          = $value_of_first;
+    $first     = $variable1;
+    $variable1 = ($variable1===$value1) ? $value2 : $value1;
+    $isRef     = ($variable1===$variable2);
+    $variable1 = $first;
 
-    return $is_ref;
+    return $isRef;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -404,6 +407,17 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Dumps an uninitialized property.
+   *
+   * @param string|int|null $name The name of the property.
+   */
+  private function dumpUninitialized($name)
+  {
+    $this->writer->writeUninitialized($name);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Returns the reflections of a class, trait or interface, its parent classes, and implemented interfaces.
    *
    * @param \ReflectionClass $reflection The reflection of the class, trait or interface.
@@ -478,12 +492,31 @@ class VarDumper
     switch (true)
     {
       case is_bool($value):
+        $ref = $this->testSeen($value, false, true);
+        break;
+
       case is_null($value):
+        $ref = $this->testSeenNull($value);
+        break;
+
       case is_int($value):
+        $ref = $this->testSeen($value, 1, 2);
+        break;
+
       case is_string($value):
+        $ref = $this->testSeen($value, 'a', 'z');
+        break;
+
       case is_double($value):
+        $ref = $this->testSeen($value, 1.0, 2.0);
+        break;
+
       case is_resource($value):
-        $ref = $this->testSeen($value);
+        $alt1 = fopen('php://stdin', 'r');
+        $alt2 = fopen('php://stdout', 'w');
+        $ref  = $this->testSeen($value, $alt1, $alt2);
+        fclose($alt2);
+        fclose($alt1);
         break;
 
       case is_object($value):
@@ -544,7 +577,14 @@ class VarDumper
         break;
 
       case is_object($value):
-        $this->dumpObject($value, $name);
+        if (is_a($value, Uninitialized::class))
+        {
+          $this->dumpUninitialized($name);
+        }
+        else
+        {
+          $this->dumpObject($value, $name);
+        }
         break;
 
       case is_array($value):
@@ -562,13 +602,15 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If a value (not an array) has been seen before returns the ID of the variable. Otherwise returns null.
+   * If a value (not an array or object) has been seen before returns the ID of the variable. Otherwise returns null.
    *
-   * @param mixed $value The value.
+   * @param mixed $value  The value.
+   * @param mixed $value1 The first alternative value.
+   * @param mixed $value2 The second alternative value.
    *
    * @return int|null
    */
-  private function testSeen(&$value): ?int
+  private function testSeen(&$value, $value1, $value2): ?int
   {
     switch (true)
     {
@@ -582,7 +624,7 @@ class VarDumper
         {
           if (!is_array($item) && !is_object($item))
           {
-            $check = self::testReferences($item, $value);
+            $check = self::testReferences($item, $value, $value1, $value2);
             if ($check)
             {
               return $ref;
@@ -634,13 +676,34 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * If a value (not an array or object) has been seen before returns the ID of the variable. Otherwise returns null.
+   *
+   * @param mixed $value The value.
+   *
+   * @return int|null
+   */
+  private function testSeenNull(&$value)
+  {
+    try
+    {
+      return $this->testSeen($value, false, true);
+    }
+    catch (\Throwable $exception)
+    {
+      // $value is typed and not a boolean. We don't know which type and how to construct two different instances.
+      return null;
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * If an object has been seen before returns the ID of the variable. Otherwise returns null.
    *
    * @param object $value The value.
    *
    * @return int|null
    */
-  private function testSeenObject($value): ?int
+  private function testSeenObject(object $value): ?int
   {
     foreach ($this->seen as $ref => $item)
     {

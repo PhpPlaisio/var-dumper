@@ -163,39 +163,49 @@ class TestVarWriter implements VarWriter
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * {@inheritdoc}
+   */
+  public function writeUninitialized($name): void
+  {
+    $this->writeScalar(null, null, $name, 'uninitialized', null);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Writes the name of a variable.
    *
    * @param string|int|null $name  The name of the variable.
-   * @param string          $type  The type of the value.
+   * @param string|null     $type  The type of the value.
    * @param int|null        $id    The ID of the value.
    * @param int|null        $ref   The ID of the value if the variable is a reference to a value that has been dumped
    *                               already.
    * @param string|null     $value The text for displaying the value.
    */
-  private function writeName($name, string $type, ?int $id = null, ?int $ref = null, ?string $value = null): void
+  private function writeName($name, ?string $type, ?int $id = null, ?int $ref = null, ?string $value = null): void
   {
     $text = '';
     if ($name!==null)
     {
       $text .= $name;
     }
-    $text .= '[';
     if ($type!==null)
     {
-      $text .= sprintf('type=%s ', $type);
-    }
-    if ($id!==null)
-    {
-      $text .= sprintf('id=%d ', $id);
-    }
-    if ($ref!==null)
-    {
-      $text .= sprintf('ref=%d ', $ref);
-    }
-    $text = rtrim($text);
-    $text .= ']';
+      $text .= '[';
 
-    $text = sprintf('%-30s', $text);
+      $text .= sprintf('type=%s ', $type);
+
+      if ($id!==null)
+      {
+        $text .= sprintf('id=%d ', $id);
+      }
+      if ($ref!==null)
+      {
+        $text .= sprintf('ref=%d ', $ref);
+      }
+      $text = rtrim($text);
+      $text .= ']';
+    }
+    $text = sprintf('%-40s', $text);
 
     if ($value!==null)
     {
@@ -215,9 +225,9 @@ class TestVarWriter implements VarWriter
    *                               already.
    * @param string|int|null $name  The name of the variable.
    * @param string          $value The text for displaying the value.
-   * @param string          $type  The type of the value.
+   * @param string|null     $type  The type of the value.
    */
-  private function writeScalar(?int $id, ?int $ref, $name, string $value, string $type)
+  private function writeScalar(?int $id, ?int $ref, $name, string $value, ?string $type)
   {
     $this->writeName($name, $type, $id, $ref, $value);
   }
