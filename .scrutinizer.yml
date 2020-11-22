@@ -10,6 +10,11 @@ build:
     analysis:
       tests:
         override:
+          - php-scrutinizer-run
+
+    tests-and-coverage:
+      tests:
+        override:
           - command: './bin/phing unit'
             coverage:
               file:   'test/coverage.xml'
