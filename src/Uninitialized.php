@@ -14,7 +14,7 @@ class Uninitialized
    *
    * @var Uninitialized|null
    */
-  private static $instance = null;
+  private static ?Uninitialized $instance = null;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**

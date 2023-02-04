@@ -6,7 +6,7 @@ namespace Plaisio\Debug;
 use SetBased\Exception\FallenException;
 
 /**
- * A VarDumper with minimal memory foot print that detects references and recursion and writes data directly to a
+ * A VarDumper with minimal memory footprint that detects references and recursion and writes data directly to a
  * stream.
  */
 class VarDumper
@@ -17,28 +17,28 @@ class VarDumper
    *
    * @var string
    */
-  private $gid;
+  private string $gid;
 
   /**
    * If true scalar references to values must be traced.
    *
    * @var bool
    */
-  private $scalarReferences;
+  private bool $scalarReferences;
 
   /**
    * The variables that we have dumped so var.
    *
    * @var array
    */
-  private $seen;
+  private array $seen;
 
   /**
    * The object for rendering the var dump in the desired output format.
    *
    * @var VarWriter
    */
-  private $writer;
+  private VarWriter $writer;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -53,14 +53,14 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns a reference to a non static property of an object.
+   * Returns a reference to a non-static property of an object.
    *
    * @param object $object   The object.
    * @param string $property The name of the property.
    *
    * @return mixed
    */
-  private static function &getProperty(object $object, string $property)
+  private static function &getProperty(object $object, string $property): mixed
   {
     try
     {
@@ -86,7 +86,7 @@ class VarDumper
    *
    * @return mixed
    */
-  private static function &getStaticProperty(object $object, string $property)
+  private static function &getStaticProperty(object $object, string $property): mixed
   {
     try
     {
@@ -114,7 +114,7 @@ class VarDumper
    *
    * @return bool
    */
-  private static function testReferences(&$variable1, &$variable2, $value1, $value2): bool
+  private static function testReferences(mixed &$variable1, mixed &$variable2, mixed $value1, mixed $value2): bool
   {
     if ($variable1!==$variable2)
     {
@@ -140,7 +140,7 @@ class VarDumper
    * @api
    * @since 1.0.0
    */
-  public function dump($name, &$value, bool $scalarReferences = false): void
+  public function dump(mixed $name, mixed &$value, bool $scalarReferences = false): void
   {
     $this->seen             = [];
     $this->scalarReferences = $scalarReferences;
@@ -160,7 +160,7 @@ class VarDumper
    * @param array           $value The array.
    * @param string|int|null $name  Variable name.
    */
-  private function dumpArray(array &$value, $name): void
+  private function dumpArray(array &$value, mixed $name): void
   {
     [$id, $ref] = $this->isReference($value);
 
@@ -188,7 +188,7 @@ class VarDumper
    * @param bool            $value The boolean.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpBool(bool &$value, $name): void
+  private function dumpBool(bool &$value, mixed $name): void
   {
     if ($this->scalarReferences)
     {
@@ -210,7 +210,7 @@ class VarDumper
    * @param float           $value The float.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpFloat(float &$value, $name): void
+  private function dumpFloat(float &$value, mixed $name): void
   {
     if ($this->scalarReferences)
     {
@@ -227,12 +227,12 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Dumps an integer.
+   * Dumps a integer.
    *
    * @param int             $value The integer.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpInt(int &$value, $name): void
+  private function dumpInt(int &$value, mixed $name): void
   {
     if ($this->scalarReferences)
     {
@@ -254,7 +254,7 @@ class VarDumper
    * @param null            $value The null.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpNull(&$value, $name): void
+  private function dumpNull(&$value, mixed $name): void
   {
     if ($this->scalarReferences)
     {
@@ -276,7 +276,7 @@ class VarDumper
    * @param object          $value The object.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpObject(object $value, $name): void
+  private function dumpObject(object $value, mixed $name): void
   {
     [$id, $ref] = $this->isReference($value);
 
@@ -376,7 +376,7 @@ class VarDumper
    * @param resource        $value The resource.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpResource($value, $name): void
+  private function dumpResource($value, mixed $name): void
   {
     [$id, $ref] = $this->isReference($value);
 
@@ -390,7 +390,7 @@ class VarDumper
    * @param string          $value The string.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpString(string &$value, $name): void
+  private function dumpString(string &$value, mixed $name): void
   {
     if ($this->scalarReferences)
     {
@@ -411,7 +411,7 @@ class VarDumper
    *
    * @param string|int|null $name The name of the property.
    */
-  private function dumpUninitialized($name)
+  private function dumpUninitialized(mixed $name)
   {
     $this->writer->writeUninitialized($name);
   }
@@ -487,7 +487,7 @@ class VarDumper
    *
    * @return array<int|null>
    */
-  private function isReference(&$value): array
+  private function isReference(mixed &$value): array
   {
     switch (true)
     {
@@ -543,7 +543,7 @@ class VarDumper
    * @param mixed           $value The value.
    * @param string|int|null $name  Variable The name of the variable.
    */
-  private function recursiveDump(&$value, $name): void
+  private function recursiveDump(mixed &$value, mixed $name): void
   {
     switch (true)
     {
@@ -610,7 +610,7 @@ class VarDumper
    *
    * @return int|null
    */
-  private function testSeen(&$value, $value1, $value2): ?int
+  private function testSeen(mixed &$value, mixed $value1, mixed $value2): ?int
   {
     switch (true)
     {
@@ -644,7 +644,7 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If an array has been seen before returns the ID of the array. Otherwise returns null.
+   * If an array has been seen before returns the ID of the array. Otherwise, returns null.
    *
    * @param array $value The value.
    *
@@ -676,13 +676,13 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If a value (not an array or object) has been seen before returns the ID of the variable. Otherwise returns null.
+   * If a value (not an array or object) has been seen before returns the ID of the variable. Otherwise, returns null.
    *
    * @param mixed $value The value.
    *
    * @return int|null
    */
-  private function testSeenNull(&$value)
+  private function testSeenNull(mixed &$value): ?int
   {
     try
     {
@@ -697,7 +697,7 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If an object has been seen before returns the ID of the variable. Otherwise returns null.
+   * If an object has been seen before returns the ID of the variable. Otherwise, returns null.
    *
    * @param object $value The value.
    *

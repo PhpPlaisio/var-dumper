@@ -16,15 +16,15 @@ class TestClass extends TestParentClass implements \Countable
   use TestTrait;
 
   //--------------------------------------------------------------------------------------------------------------------
-  private $false = false;
+  private bool $false = false;
 
-  private $null = null;
+  private mixed $null = null;
 
-  private $true = true;
+  private bool $true = true;
 
   private $resource;
 
-  private $password = 'qwerty';
+  private string $password = 'qwerty';
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -49,7 +49,7 @@ class TestClass extends TestParentClass implements \Countable
    *
    * @return int
    */
-  public function count()
+  public function count(): int
   {
     return 0;
   }
