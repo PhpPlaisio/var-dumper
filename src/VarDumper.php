@@ -68,7 +68,7 @@ class VarDumper
         return $this->$property;
       }, $object, $object)->__invoke();
     }
-    catch (\Error $exception)
+    catch (\Error)
     {
       // Property in an uninitialized typed property.
       $value = Uninitialized::get();
@@ -94,7 +94,7 @@ class VarDumper
         return self::$$property;
       }, $object, $object)->__invoke();
     }
-    catch (\Error $exception)
+    catch (\Error)
     {
       // Property in an uninitialized typed property.
       $value = Uninitialized::get();
@@ -254,7 +254,7 @@ class VarDumper
    * @param null            $value The null.
    * @param string|int|null $name  The name of the variable.
    */
-  private function dumpNull(&$value, mixed $name): void
+  private function dumpNull(null &$value, mixed $name): void
   {
     if ($this->scalarReferences)
     {
@@ -287,7 +287,7 @@ class VarDumper
       // Dump all fields of the object, unless the object is me.
       if ($this!==$value)
       {
-        if (strpos(get_class($value), '\\')!==false)
+        if (str_contains(get_class($value), '\\'))
         {
           $this->dumpObjectUserDefinedClass($value);
         }
@@ -411,7 +411,7 @@ class VarDumper
    *
    * @param string|int|null $name The name of the property.
    */
-  private function dumpUninitialized(mixed $name)
+  private function dumpUninitialized(mixed $name): void
   {
     $this->writer->writeUninitialized($name);
   }
@@ -481,7 +481,7 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If a value has been dumped before returns the ID of the variable. Otherwise returns null.
+   * If a value has been dumped before returns the ID of the variable. Otherwise, returns null.
    *
    * @param mixed $value The variable.
    *
@@ -602,7 +602,7 @@ class VarDumper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * If a value (not an array or object) has been seen before returns the ID of the variable. Otherwise returns null.
+   * If a value (not an array or object) has been seen before returns the ID of the variable. Otherwise, returns null.
    *
    * @param mixed $value  The value.
    * @param mixed $value1 The first alternative value.
@@ -688,7 +688,7 @@ class VarDumper
     {
       return $this->testSeen($value, false, true);
     }
-    catch (\Throwable $exception)
+    catch (\Throwable)
     {
       // $value is typed and not a boolean. We don't know which type and how to construct two different instances.
       return null;

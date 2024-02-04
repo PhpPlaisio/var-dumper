@@ -16,7 +16,7 @@ class TestVarWriter implements VarWriter
    *
    * @var int
    */
-  private $level = 0;
+  private int $level = 0;
 
   //--------------------------------------------------------------------------------------------------------------------
 
@@ -174,14 +174,18 @@ class TestVarWriter implements VarWriter
   /**
    * Writes the name of a variable.
    *
-   * @param string|int|null $name  The name of the variable.
+   * @param int|string|null $name  The name of the variable.
    * @param string|null     $type  The type of the value.
    * @param int|null        $id    The ID of the value.
    * @param int|null        $ref   The ID of the value if the variable is a reference to a value that has been dumped
    *                               already.
    * @param string|null     $value The text for displaying the value.
    */
-  private function writeName($name, ?string $type, ?int $id = null, ?int $ref = null, ?string $value = null): void
+  private function writeName(int|string|null $name,
+                             ?string $type,
+                             ?int $id = null,
+                             ?int $ref = null,
+                             ?string $value = null): void
   {
     $text = '';
     if ($name!==null)
@@ -223,11 +227,11 @@ class TestVarWriter implements VarWriter
    * @param int|null        $id    The ID of the value.
    * @param int|null        $ref   The ID of the value if the variable is a reference to a value that has been dumped
    *                               already.
-   * @param string|int|null $name  The name of the variable.
+   * @param int|string|null $name  The name of the variable.
    * @param string          $value The text for displaying the value.
    * @param string|null     $type  The type of the value.
    */
-  private function writeScalar(?int $id, ?int $ref, $name, string $value, ?string $type)
+  private function writeScalar(?int $id, ?int $ref, int|string|null $name, string $value, ?string $type): void
   {
     $this->writeName($name, $type, $id, $ref, $value);
   }
