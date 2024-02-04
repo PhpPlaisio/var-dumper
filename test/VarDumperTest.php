@@ -27,7 +27,7 @@ class VarDumperTest extends TestCase
     $dumper = new VarDumper(new TestVarWriter());
     $dumper->dump('array', $value);
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     $expected = <<< EOL
 array[type=array id=0]        
@@ -67,7 +67,7 @@ EOL;
     $dumper = new VarDumper(new TestVarWriter());
     $dumper->dump('array', $value, true);
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     $expected = <<< EOL
 array[type=array id=0]        
@@ -102,7 +102,7 @@ EOL;
     $dumper = new VarDumper(new TestVarWriter());
     $dumper->dump('class', $value);
 
-    $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
     $expected = <<< EOL
 class[type=class id=0]             => Plaisio\Debug\Test\TestClass
@@ -137,22 +137,65 @@ EOL;
   /**
    * Test an array with scalars.
    */
+  public function testStdClass(): void
+  {
+    $value = new \StdClass();
+
+    $value->int       = 1;
+    $value->float     = 3.14;
+    $value->string    = 'Hello, World!';
+    $value->true      = true;
+    $value->false     = false;
+    $value->null      = null;
+    $value->refClass  = &$value;
+    $value->refInt    = &$value->int;
+    $value->refFloat  = &$value->float;
+    $value->refString = &$value->string;
+    $value->refTrue   = &$value->true;
+    $value->refFalse  = &$value->false;
+    $value->refNull   = &$value->null;
+
+    $dumper = new VarDumper(new TestVarWriter());
+    $dumper->dump('class', $value, true);
+
+    $output = $this->getActualOutputForAssertion();
+
+    $expected = <<< EOL
+class[type=class id=0]         => stdClass
+  int[type=int id=1]             => 1
+  float[type=float ref=1]        => 3.14
+  string[type=string ref=1]      => Hello, World!
+  true[type=bool ref=1]          => true
+  false[type=bool ref=1]         => false
+  null[type=null ref=1]          => null
+  refClass[type=object ref=0]    => stdClass
+  refInt[type=int ref=1]         => 1
+  refFloat[type=float ref=1]     => 3.14
+  refString[type=string ref=1]   => Hello, World!
+  refTrue[type=bool ref=1]       => true
+  refFalse[type=bool ref=1]      => false
+  refNull[type=null ref=1]       => null
+EOL;
+
+    $expected = trim(preg_replace('/ +/', ' ', $expected));
+    $output   = trim(preg_replace('/ +/', ' ', $output));
+    self::assertSame($expected, $output);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Test an array with scalars.
+   */
   public function testTypedClass(): void
   {
-    if (PHP_VERSION_ID<=70400)
-    {
-      static::markTestSkipped('No typed properties.');
-    }
-    else
-    {
-      $value = new TestTypedClass();
+    $value = new TestTypedClass();
 
-      $dumper = new VarDumper(new TestVarWriter());
-      $dumper->dump('class', $value, true);
+    $dumper = new VarDumper(new TestVarWriter());
+    $dumper->dump('class', $value, true);
 
-      $output = $this->getActualOutput();
+    $output = $this->getActualOutputForAssertion();
 
-      $expected = <<< EOL
+    $expected = <<< EOL
 class[type=class id=0]               => Plaisio\Debug\Test\TestTypedClass
   refFalse[type=bool id=1]             => false
   refFloat[type=float id=2]            => 3.14
@@ -182,56 +225,6 @@ class[type=class id=0]               => Plaisio\Debug\Test\TestTypedClass
   propertyInt[type=int id=18]          => 1
   propertyString[type=string id=19]    => Hello, World!
   propertyTrue[type=bool id=20]        => true
-EOL;
-
-      $expected = trim(preg_replace('/ +/', ' ', $expected));
-      $output   = trim(preg_replace('/ +/', ' ', $output));
-      self::assertSame($expected, $output);
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Test an array with scalars.
-   */
-  public function testStdClass(): void
-  {
-    $value = new \StdClass();
-
-    $value->int       = 1;
-    $value->float     = 3.14;
-    $value->string    = 'Hello, World!';
-    $value->true      = true;
-    $value->false     = false;
-    $value->null      = null;
-    $value->refClass  = &$value;
-    $value->refInt    = &$value->int;
-    $value->refFloat  = &$value->float;
-    $value->refString = &$value->string;
-    $value->refTrue   = &$value->true;
-    $value->refFalse  = &$value->false;
-    $value->refNull   = &$value->null;
-
-    $dumper = new VarDumper(new TestVarWriter());
-    $dumper->dump('class', $value, true);
-
-    $output = $this->getActualOutput();
-
-    $expected = <<< EOL
-class[type=class id=0]         => stdClass
-  int[type=int id=1]             => 1
-  float[type=float ref=1]        => 3.14
-  string[type=string ref=1]      => Hello, World!
-  true[type=bool ref=1]          => true
-  false[type=bool ref=1]         => false
-  null[type=null ref=1]          => null
-  refClass[type=object ref=0]    => stdClass
-  refInt[type=int ref=1]         => 1
-  refFloat[type=float ref=1]     => 3.14
-  refString[type=string ref=1]   => Hello, World!
-  refTrue[type=bool ref=1]       => true
-  refFalse[type=bool ref=1]      => false
-  refNull[type=null ref=1]       => null
 EOL;
 
     $expected = trim(preg_replace('/ +/', ' ', $expected));
