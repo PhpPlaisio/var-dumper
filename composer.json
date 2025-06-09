@@ -9,8 +9,8 @@
   "license": "MIT",
   "require": {
     "php": ">=8.3",
-    "plaisio/var-dumper-writer": "^3.1.0",
-    "setbased/exception": "^2.3.0"
+    "plaisio/var-dumper-writer": "^3.2.0",
+    "setbased/exception": "^2.6.0"
   },
   "require-dev": {
     "ext-mbstring": "*",
